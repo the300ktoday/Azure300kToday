@@ -1,18 +1,23 @@
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
+from azure.storage.blob import StaticWebsite, BlobServiceClient
 import os
 
 primary_subscription = os.environ.get("SUBSCRIPTION_ID")
+bob_connect_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
 
 resource_client = ResourceManagementClient(
-    credential=DefaultAzureCredential(), 
-    subscription_id=primary_subscription
+        credential=DefaultAzureCredential(), 
+        subscription_id=primary_subscription
     )
 storage_client = StorageManagementClient(
-    credential=DefaultAzureCredential(),
-    subscription_id=primary_subscription
-)
+        credential=DefaultAzureCredential(),
+        subscription_id=primary_subscription
+    )
+blob_client = BlobServiceClient.from_connection_string(
+        bob_connect_string
+        )
 
 rg = "rg-pietestgonewonglol"
 sa = "sapietestgonewonglo1"
@@ -30,7 +35,8 @@ def new_resourcegroup():
         print(f"{rg} has been created!")
 
     except Exception as e:
-        print("We ran into an issue creating to Resource Group, please read the errro below:")
+        print("We ran into an issue")
+        print({e})
 
 def remove_resourcegroup():
     try:
@@ -67,17 +73,12 @@ def new_storageaccount():
 def new_staticsite():
     try:
         print("Creating static blob site")
-        storage_client.blob_services.set_service_properties(
-            resource_group_name=rg,
-            account_name=sa,
-            parameters= {
-                "static_website": {
-                    "enabled": True,
-                    "index_document": "index.html",
-                    "error_document_404_path": "404.html"
-                }
-            }
+        static_site_settings = StaticWebsite(
+            enabled=True,
+            index_document="Index.html",
+            error_document404_path="404.html"
         )
+        blob_client.set_service_properties(static_website=static_site_settings)
 
     except Exception as e:
         print("Something went wrong")
