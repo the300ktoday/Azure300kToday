@@ -4,12 +4,9 @@ from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import StaticWebsite, BlobServiceClient, ContentSettings
 from azure.mgmt.frontdoor import FrontDoorManagementClient
 from azure.mgmt.frontdoor.models import (
-    FrontDoor,
     RoutingRule,
     BackendPool,
     FrontendEndpoint,
-    HealthProbeSettings,
-    LoadBalancingSettings
 )
 import os
 
@@ -143,18 +140,42 @@ def new_frontdoor():
         }
     )
 
-
-    front_door_parameters = FrontDoor(
-        location="westus",
-
-
+    frontend_endpoint_name = "MyFrontendEndpoint"
+    frontend_endpoint_settings = FrontendEndpoint(
+        name=frontend_endpoint_name,
+        host_name=frontend_hostname
     )
 
-    frontdoor_client.front_doors.begin_create_or_update(
-        resource_group_name=rg,
-        front_door_name=fdname,
-        front_door_parameters=
+    routing_rule_name = "Myfirstroutingrule"
+    routing_rule_settings = RoutingRule(
+        name=routing_rule_name,
+        accepted_protocols=["Http", "Https"],
+        enabled_state="Enabled",
+        patterns_to_match=["/*"],
+        forwarding_protocol="HttpsOnly",
+        frontend_endpoints=[{
+            "id": f"/subscriptions/{primary_subscription}/resourceGroups/{rg}/providers/Microsoft.Network/frontDoors/{fdname}/frontendEndpoints/{frontend_endpoint_name}"
+        }],
+        backend_pool={
+            "id": f"/subscriptions/{primary_subscription}/resourceGroups/{rg}/providers/Microsoft.Network/frontDoors/{fdname}/backendPools/{backend_pool_name}"
+        }  
     )
+    try:
+        poller = frontdoor_client.front_doors.begin_create_or_update(
+            resource_group_name=rg,
+            front_door_name=fdname,
+            front_door_parameters={
+                "location": "Global",
+                "frontend_endpoints": [frontend_endpoint_settings],
+                "backend_pools": [backend_pool_settings],
+                "routing_rules": [routing_rule_settings]
+            }
+        )
+        front_door_result = poller.result()
+        print(front_door_result)
+
+    except Exception as e:
+        print(e)
 
 
 def remove_resourcegroup():
@@ -170,5 +191,5 @@ def remove_resourcegroup():
         print("We ran into an issue")
         print(e)
 
-#new_resourcegroup()
-remove_resourcegroup()
+new_resourcegroup()
+#remove_resourcegroup()
