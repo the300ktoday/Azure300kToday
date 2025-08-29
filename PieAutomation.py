@@ -3,11 +3,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import StaticWebsite, BlobServiceClient, ContentSettings
 from azure.mgmt.frontdoor import FrontDoorManagementClient
-from azure.mgmt.frontdoor.models import (
-    RoutingRule,
-    BackendPool,
-    FrontendEndpoint,
-)
+from azure.mgmt.cdn import CdnManagementClient
 import os
 
 primary_subscription = os.environ.get("AZURE_SUBSCRIPTION_ID")
@@ -120,59 +116,9 @@ def new_sitefiles(service_client):
         print(e)
 
 def new_frontdoor():
-    backend_pool_name = "Thisisthebackend"
-    backend_pool_settings = BackendPool(
-        name=backend_pool_name,
-        backends=[{
-            "address": backend_host,
-            "http_port": 80,
-            "https_port": 443,
-            "enabled_sate": "Enabled"
-        }],
-        health_probe_settings={
-            "path": "/",
-            "protocol": "Htpp",
-            "interval_in_seconds": 30
-        },
-        load_balancing_settings={
-            "sample_size": 4,
-            "successful_samples_required": 2
-        }
-    )
-
-    frontend_endpoint_name = "MyFrontendEndpoint"
-    frontend_endpoint_settings = FrontendEndpoint(
-        name=frontend_endpoint_name,
-        host_name=frontend_hostname
-    )
-
-    routing_rule_name = "Myfirstroutingrule"
-    routing_rule_settings = RoutingRule(
-        name=routing_rule_name,
-        accepted_protocols=["Http", "Https"],
-        enabled_state="Enabled",
-        patterns_to_match=["/*"],
-        forwarding_protocol="HttpsOnly",
-        frontend_endpoints=[{
-            "id": f"/subscriptions/{primary_subscription}/resourceGroups/{rg}/providers/Microsoft.Network/frontDoors/{fdname}/frontendEndpoints/{frontend_endpoint_name}"
-        }],
-        backend_pool={
-            "id": f"/subscriptions/{primary_subscription}/resourceGroups/{rg}/providers/Microsoft.Network/frontDoors/{fdname}/backendPools/{backend_pool_name}"
-        }  
-    )
+    cdn_client = CdnManagementClient(
     try:
-        poller = frontdoor_client.front_doors.begin_create_or_update(
-            resource_group_name=rg,
-            front_door_name=fdname,
-            front_door_parameters={
-                "location": "Global",
-                "frontend_endpoints": [frontend_endpoint_settings],
-                "backend_pools": [backend_pool_settings],
-                "routing_rules": [routing_rule_settings]
-            }
-        )
-        front_door_result = poller.result()
-        print(front_door_result)
+        pol
 
     except Exception as e:
         print(e)
