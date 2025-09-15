@@ -11,8 +11,8 @@ from azure.mgmt.frontdoor.models import (
 import os
 
 primary_subscription = os.environ.get("AZURE_SUBSCRIPTION_ID")
-rg = "rg-timetokeepgoing101"
-sa = "satimetokeepgoing101"
+rg = "rg-aboutme-html"
+sa = "sa-aboutme-html"
 raw_file_404 = r"C:\Github\Azure300kToday\404.html"
 raw_file_index = r"C:\Github\Azure300kToday\Index.html"
 file_404 = os.path.basename(raw_file_404)
@@ -113,7 +113,7 @@ def new_sitefiles(service_client):
         blob_client = container_client.get_blob_client(file_404)
         with open (file_404, "rb") as data:
             blob_client.upload_blob(data, overwrite=True, content_settings=file_type)
-        new_frontdoor()
+        #new_frontdoor()
     
     except Exception as e:
         print("Something went wrong")
